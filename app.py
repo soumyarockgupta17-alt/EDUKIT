@@ -282,22 +282,35 @@ with tabs[0]:
         fig.update_layout(showlegend=False, xaxis_title='', yaxis_tickprefix='₹')
         st.plotly_chart(styled(fig), use_container_width=True)
 
-    # scatter
+    # scatter — built with go.Scatter per segment to avoid px size/color conflicts
     st.subheader("Deal Value vs NPS Score")
     segs = sorted(fdf['Customer_Segment'].unique())
-    seg_color_map = {s: PAL[i % len(PAL)] for i, s in enumerate(segs)}
-    # size must be strictly positive — use absolute value guard
-    scatter_df = fdf.copy()
-    scatter_df['bubble'] = scatter_df['Deal_Value_INR'].clip(lower=1)
-    fig = px.scatter(scatter_df, x='NPS_Score', y='bubble',
-                     color='Customer_Segment',
-                     size='bubble', size_max=30,
-                     hover_data=['City','Product_Interest','Pipeline_Stage','Deal_Value_INR'],
-                     color_discrete_map=seg_color_map,
-                     opacity=0.75,
-                     title='Deal Value vs NPS — coloured by Segment',
-                     labels={'bubble':'Deal Value (INR)','NPS_Score':'NPS Score'})
-    fig.update_layout(yaxis_tickprefix='₹')
+    fig = go.Figure()
+    for i, seg_name in enumerate(segs):
+        mask_s = fdf['Customer_Segment'] == seg_name
+        sub = fdf[mask_s]
+        fig.add_trace(go.Scatter(
+            x=sub['NPS_Score'],
+            y=sub['Deal_Value_INR'],
+            mode='markers',
+            name=seg_name,
+            marker=dict(color=PAL[i % len(PAL)], size=9, opacity=0.75,
+                        line=dict(width=0.5, color='rgba(255,255,255,0.2)')),
+            hovertemplate=(
+                '<b>%{customdata[0]}</b><br>'
+                'NPS: %{x:.1f}<br>'
+                'Deal: ₹%{y:,.0f}<br>'
+                'Product: %{customdata[1]}<br>'
+                'Stage: %{customdata[2]}<extra></extra>'
+            ),
+            customdata=sub[['City','Product_Interest','Pipeline_Stage']].values,
+        ))
+    fig.update_layout(
+        title='Deal Value vs NPS — coloured by Segment',
+        xaxis_title='NPS Score',
+        yaxis_title='Deal Value (INR)',
+        yaxis_tickprefix='₹',
+    )
     st.plotly_chart(styled(fig), use_container_width=True)
 
     qual_plus = fdf['Pipeline_Stage'].isin(['Qualified','Proposal Sent','Closed Won']).sum()
