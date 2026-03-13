@@ -575,15 +575,15 @@ with tabs[5]:
                          color_continuous_scale=['#ff4d6d','#ffd166','#06d6a0'],
                          range_color=[0,30],
                          scope='asia',
-                         title='City Performance Map — bubble size = leads, colour = conv rate',
-                         center={'lat':22,'lon':80}, projection_scale=4)
+                         title='City Performance Map — bubble size = leads, colour = conv rate')
     fig.update_geos(
         bgcolor='rgba(0,0,0,0)',
         landcolor='#1a2235', oceancolor='#0b0f1a',
         coastlinecolor='rgba(255,255,255,0.15)',
         countrycolor='rgba(255,255,255,0.2)',
         showland=True, showocean=True, showcoastlines=True,
-        lataxis_range=[8,38], lonaxis_range=[68,98]
+        lataxis_range=[6,38], lonaxis_range=[65,100],
+        center=dict(lat=22, lon=80),
     )
     fig.update_layout(coloraxis_colorbar=dict(title='Conv %'), height=550)
     st.plotly_chart(styled(fig), use_container_width=True)
