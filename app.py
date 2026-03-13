@@ -284,11 +284,19 @@ with tabs[0]:
 
     # scatter
     st.subheader("Deal Value vs NPS Score")
-    fig = px.scatter(fdf, x='NPS_Score', y='Deal_Value_INR',
-                     color='Customer_Segment', size='Deal_Value_INR',
-                     hover_data=['City','Product_Interest','Pipeline_Stage'],
-                     color_discrete_sequence=PAL, opacity=0.75,
-                     title='Deal Value vs NPS — coloured by Segment')
+    segs = sorted(fdf['Customer_Segment'].unique())
+    seg_color_map = {s: PAL[i % len(PAL)] for i, s in enumerate(segs)}
+    # size must be strictly positive — use absolute value guard
+    scatter_df = fdf.copy()
+    scatter_df['bubble'] = scatter_df['Deal_Value_INR'].clip(lower=1)
+    fig = px.scatter(scatter_df, x='NPS_Score', y='bubble',
+                     color='Customer_Segment',
+                     size='bubble', size_max=30,
+                     hover_data=['City','Product_Interest','Pipeline_Stage','Deal_Value_INR'],
+                     color_discrete_map=seg_color_map,
+                     opacity=0.75,
+                     title='Deal Value vs NPS — coloured by Segment',
+                     labels={'bubble':'Deal Value (INR)','NPS_Score':'NPS Score'})
     fig.update_layout(yaxis_tickprefix='₹')
     st.plotly_chart(styled(fig), use_container_width=True)
 
