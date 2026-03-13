@@ -425,17 +425,19 @@ with tabs[2]:
 with tabs[3]:
     st.subheader("Monthly Lead & Revenue Trends")
 
-    fdf['Month'] = fdf['Date'].dt.month
-    fdf['MonthName'] = fdf['Date'].dt.strftime('%b')
     months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    # Work on a local copy so we never mutate the filtered df across tabs
+    tdf = fdf.copy()
+    tdf['Month'] = pd.to_datetime(tdf['Date'], errors='coerce').dt.month.fillna(1).astype(int)
+    tdf['MonthName'] = tdf['Month'].apply(lambda m: months[m-1])
 
-    monthly = fdf.groupby('Month').agg(
+    monthly = tdf.groupby('Month').agg(
         Leads=('Lead_ID','count'),
         Conversions=('Converted','sum'),
     ).reindex(range(1,13), fill_value=0).reset_index()
     monthly['MonthName'] = months
 
-    monthly_rev = fdf[fdf['Converted']==1].groupby('Month')['Deal_Value_INR'].sum()\
+    monthly_rev = tdf[tdf['Converted']==1].groupby('Month')['Deal_Value_INR'].sum()\
                      .reindex(range(1,13), fill_value=0).reset_index()
     monthly_rev.columns = ['Month','Revenue']
 
@@ -465,8 +467,9 @@ with tabs[3]:
 
     # Channel trend heatmap
     st.subheader("Channel × Month Heatmap")
-    heat = fdf.groupby(['Acquisition_Channel','Month']).size().unstack(fill_value=0)
-    heat.columns = [months[m-1] for m in heat.columns]
+    heat = tdf.groupby(['Acquisition_Channel','Month']).size().unstack(fill_value=0)
+    # Columns are integer month numbers (1-12); map safely regardless of which are present
+    heat.columns = [months[int(m)-1] if str(m).isdigit() else m for m in heat.columns]
     fig = px.imshow(heat, color_continuous_scale='Viridis',
                     title='Lead Volume: Channel × Month',
                     text_auto=True, aspect='auto')
