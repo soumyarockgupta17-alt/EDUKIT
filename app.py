@@ -65,11 +65,16 @@ def generate_base_data():
     stages      = ['Lead','Prospect','Qualified','Proposal Sent','Closed Won','Closed Lost']
     prices      = {'EduKit Basic':2999,'EduKit Pro':5999,'EduKit Enterprise':14999,'EduKit Lite':1499}
 
-    city_w    = [.22,.20,.18,.12,.10,.10,.08]
-    ch_w      = [.35,.20,.15,.20,.10]
-    seg_w     = [.18,.18,.23,.16,.15]
-    prod_w    = [.30,.35,.15,.20]
-    stage_w   = [.18,.18,.23,.16,.15,.10]
+    def norm(w):
+        """Normalise weights so they sum to exactly 1.0 (avoids numpy float precision errors)."""
+        a = np.array(w, dtype=float)
+        return a / a.sum()
+
+    city_w    = norm([.22,.20,.18,.12,.10,.10,.08])
+    ch_w      = norm([.35,.20,.15,.20,.10])
+    seg_w     = norm([.18,.18,.23,.16,.15])
+    prod_w    = norm([.30,.35,.15,.20])
+    stage_w   = norm([.18,.18,.23,.16,.15,.10])
 
     def wrand(arr, w):
         return rng.choice(arr, p=w)
