@@ -500,6 +500,12 @@ with tabs[4]:
     # Radar
     st.subheader("Segment Radar Comparison")
     cats = ['Leads (norm)','Conv Rate (norm)','Avg Deal (norm)','Avg NPS (norm)']
+
+    def hex_to_rgba(hex_color, alpha=0.12):
+        h = hex_color.lstrip('#')
+        r2, g2, b2 = int(h[0:2],16), int(h[2:4],16), int(h[4:6],16)
+        return f'rgba({r2},{g2},{b2},{alpha})'
+
     fig = go.Figure()
     for i, row in seg.iterrows():
         vals = [
@@ -509,11 +515,13 @@ with tabs[4]:
             row['Avg_NPS']/seg['Avg_NPS'].max(),
         ]
         vals += [vals[0]]  # close polygon
+        color = PAL[i % len(PAL)]
         fig.add_trace(go.Scatterpolar(
             r=vals, theta=cats+[cats[0]],
             name=row['Customer_Segment'],
-            line_color=PAL[i % len(PAL)],
-            fill='toself', fillcolor=PAL[i % len(PAL)].replace('#','rgba(').replace('ff4d6d','255,77,109,.12)'),
+            line_color=color,
+            fill='toself',
+            fillcolor=hex_to_rgba(color, 0.12),
         ))
     fig.update_layout(title='Segment Radar Chart', polar=dict(
         bgcolor='rgba(0,0,0,0)',
